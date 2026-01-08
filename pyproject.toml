@@ -1,0 +1,25 @@
+[build-system]
+requires = ["scikit-build-core>=0.5", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pygrain"
+version = "0.1.0"
+description = "Particle packing library with C++ backend"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "gmsh",
+    "scipy"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.scikit-build]
+wheel.packages = ["pygrain"]
+cmake.build-type = "Release"
+build-dir = "build"
+editable.mode = "redirect"
+editable.rebuild = false

@@ -7,15 +7,25 @@
 namespace pygrain
 {
 
+/**
+ * @brief Particle type enumeration.
+ */
+enum class ParticleType : int
+{
+    Sphere = 0,
+    Spheroid = 1,
+    Cylinder = 2
+};
+
 struct PackingGeometry
 {
     /**
      * @brief Particle center of mass coordinates and bounding radii stored as contiguous arrays.
-     * @details Format: [x, y, z, radius]. 
+     * @details Format: [x, y, z, radius, idx]. 
      * All rotation operations are performed around a particle's center point. 
      * A bounding radius is defined as the radius of the smallest sphere enclosing the particle geometry.
      */
-    std::array<std::vector<double>, 4> particle_data;
+    std::array<std::vector<double>, 5> particle_data;
 
     /**
      * @brief Sphere center coordinates and radii from all particles stored as contiguous arrays.

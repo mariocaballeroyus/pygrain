@@ -1,4 +1,4 @@
-#include "particle_operations.hpp"
+#include "operations.hpp"
 
 namespace pygrain
 {
@@ -7,7 +7,7 @@ void translate_particle(PackingGeometry& geometry,
                         std::size_t idx, 
                         const std::array<double, 3>& translation)
 {
-    auto& [px, py, pz, pr] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particle_data;
     auto& [sx, sy, sz, sr] = geometry.sphere_data;
 
     std::size_t start = geometry.particle_offsets[idx];
@@ -29,7 +29,7 @@ void set_particle_position(PackingGeometry& geometry,
                            std::size_t idx,
                            const std::array<double, 3>& position)
 {
-    auto& [px, py, pz, pr] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particle_data;
     auto& [sx, sy, sz, sr] = geometry.sphere_data;
 
     std::size_t start = geometry.particle_offsets[idx];
@@ -55,7 +55,7 @@ void rotate_particle(PackingGeometry& geometry,
                      const std::array<double, 3>& axis, 
                      double angle)
 {
-    auto& [px, py, pz, pr] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particle_data;
     auto& [sx, sy, sz, sr] = geometry.sphere_data;
 
     // Axis assumed normalized
@@ -109,7 +109,7 @@ bool particle_interaction(PackingGeometry& geometry,
                             std::size_t idx1, 
                             std::size_t idx2)
 {
-    auto& [px, py, pz, pr] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particle_data;
     auto& [sx, sy, sz, sr] = geometry.sphere_data;
 
     std::array<double, 3> displacement = {0.0, 0.0, 0.0};

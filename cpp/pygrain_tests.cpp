@@ -2,7 +2,6 @@
 #include "catch.hpp"
 
 #include "pygrain.hpp"
-#include "particle_operations.hpp"
 
  /**
   * @brief Test adding a spherical particle to the packing.
@@ -14,7 +13,7 @@ TEST_CASE("Add Sphere Particle", "[Packing]")
     constexpr double tol = 1e-12;
 
     pygrain::Packing packing;
-    packing.add_sphere_particle(1.0);
+    packing.add_sphere_particles(1.0, 1, 0);
 
     REQUIRE(packing.get_geometry().num_spheres() == 1);
 
@@ -36,7 +35,7 @@ TEST_CASE("Translate Particle", "[ParticleGeometry]")
     constexpr double tol = 1e-12;
 
     pygrain::Packing packing;
-    packing.add_sphere_particle(1.0);
+    packing.add_sphere_particles(1.0, 1, 0);
 
     pygrain::translate_particle(packing.get_geometry(), 0, {1.0, 2.0, 3.0});
 
@@ -57,10 +56,10 @@ TEST_CASE("Rotate Particle", "[ParticleGeometry]")
     constexpr double tol = 1e-12;
 
     pygrain::Packing packing;
-    packing.add_sphere_particle(1.0);
+    packing.add_sphere_particles(1.0, 1, 0);
 
     // Manually set the center to (1,0,0) for rotation
-    auto& [px, py, pz, pr] = packing.get_geometry().particle_data;
+    auto& [px, py, pz, pr, pid] = packing.get_geometry().particle_data;
     px[0] = 1.0;
     py[0] = 0.0;
     pz[0] = 0.0;
@@ -111,7 +110,7 @@ TEST_CASE("Sphere approximation of spheroid", "[Spheroid]")
 
     // Create geometry and generate spheroid particle
     pygrain::PackingGeometry geometry;
-    pygrain::generate_spheroid_particle(geometry, aspect_ratio, minor_axis);
+    pygrain::generate_spheroid_particle(geometry, aspect_ratio, minor_axis, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();
@@ -158,7 +157,7 @@ TEST_CASE("Spheroid volume coverage", "[Spheroid]")
 
     // Create geometry and generate spheroid particle
     pygrain::PackingGeometry geometry;
-    pygrain::generate_spheroid_particle(geometry, aspect_ratio, eq_diameter);
+    pygrain::generate_spheroid_particle(geometry, aspect_ratio, eq_diameter, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();
@@ -237,7 +236,7 @@ TEST_CASE("Cylinder volume coverage", "[Cylinder]")
 
     // Create geometry and generate cylinder particle
     pygrain::PackingGeometry geometry;
-    pygrain::generate_cylinder_particle(geometry, aspect_ratio, diameter);
+    pygrain::generate_cylinder_particle(geometry, aspect_ratio, diameter, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();

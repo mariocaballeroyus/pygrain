@@ -1,0 +1,43 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+#include "packing.hpp"
+
+namespace py = pybind11;
+
+PYBIND11_MODULE(_pygrain, m)
+{
+    py::class_<pygrain::Packing>(m, "Packing")
+        .def(py::init<std::array<double, 3>>(), py::arg("lengths"))
+
+        .def("add_sphere_particles", &pygrain::Packing::add_sphere_particles, 
+                                    py::arg("radius"),
+                                    py::arg("num"),
+                                    py::arg("geometry_idx"))
+
+        .def("add_spheroid_particles", &pygrain::Packing::add_spheroid_particles, 
+                                      py::arg("aspect_ratio"), 
+                                      py::arg("minor_axis"),
+                                      py::arg("num"),
+                                      py::arg("geometry_idx"))
+
+        .def("add_cylinder_particles", &pygrain::Packing::add_cylinder_particles, 
+                                      py::arg("aspect_ratio"), 
+                                      py::arg("diameter"),
+                                      py::arg("num"),
+                                      py::arg("geometry_idx"))
+
+        .def("randomize_particles", &pygrain::Packing::randomize_particles)
+
+        .def("generate", &pygrain::Packing::generate, 
+                         py::arg("max_iterations"))
+
+        .def("num_particles", &pygrain::Packing::num_particles)
+
+        .def("data_array", [](const pygrain::Packing& self, bool periodic) {
+            auto positions = self.data_array(periodic);
+            std::size_t n = positions.size() / 8;
+            return py::array_t<double>({n, std::size_t(8)}, positions.data());
+        }, py::arg("periodic"));
+}

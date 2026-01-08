@@ -1,5 +1,5 @@
 #include "packing.hpp"
-#include "particle_operations.hpp"
+#include "operations.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -7,19 +7,36 @@
 namespace pygrain
 {
 
-void Packing::add_sphere_particle(double radius)
+void Packing::add_sphere_particles(double radius, 
+                                   int num,
+                                   std::size_t geometry_idx)
 {
-    generate_sphere_particle(geometry_, radius);
+    for (int i = 0; i < num; ++i)
+    {
+        generate_sphere_particle(geometry_, radius, geometry_idx);
+    }
 }
 
-void Packing::add_spheroid_particle(double aspect_ratio, double eq_diameter)
+void Packing::add_spheroid_particles(double aspect_ratio, 
+                                     double eq_diameter, 
+                                     int num,
+                                     std::size_t geometry_idx)
 {
-    generate_spheroid_particle(geometry_, aspect_ratio, eq_diameter);
+    for (int i = 0; i < num; ++i)
+    {
+        generate_spheroid_particle(geometry_, aspect_ratio, eq_diameter, geometry_idx);
+    }
 }
 
-void Packing::add_cylinder_particle(double aspect_ratio, double eq_diameter)
+void Packing::add_cylinder_particles(double aspect_ratio, 
+                                     double eq_diameter, 
+                                     int num,
+                                     std::size_t geometry_idx)
 {
-    generate_cylinder_particle(geometry_, aspect_ratio, eq_diameter);
+    for (int i = 0; i < num; ++i)
+    {
+        generate_cylinder_particle(geometry_, aspect_ratio, eq_diameter, geometry_idx);
+    }
 }
 
 void Packing::randomize_particles()
@@ -68,7 +85,7 @@ void Packing::generate(unsigned int max_iterations)
     for (std::size_t i = 0; i < indices.size(); ++i)
         indices[i] = i;
 
-    auto& [px, py, pz, pr] = geometry_.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry_.particle_data;
     auto& [sx, sy, sz, sr] = geometry_.sphere_data;
 
     do 
@@ -158,71 +175,136 @@ void Packing::generate(unsigned int max_iterations)
     while (num_overlaps > 0 && num_iterations < max_iterations);
 }
 
-void Packing::export_spheres_csv(const std::string& filename) const
+std::array<double, 8> Packing::particle_data(std::size_t idx) const
 {
-    std::ofstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
-        return;
-    }
-
-    file << "x,y,z,r,particle_id" << std::endl;
-
-    const auto& [px, py, pz, pr] = geometry_.particle_data;
+    const auto& [px, py, pz, pr, pid] = geometry_.particle_data;
     const auto& [sx, sy, sz, sr] = geometry_.sphere_data;
-    
     const auto& offsets = geometry_.particle_offsets;
 
-    std::size_t num_exported = 0;
+    int id = static_cast<int>(pid[idx]);
+    double x = px[idx];
+    double y = py[idx];
+    double z = pz[idx];
 
-    for (std::size_t p = 0; p < geometry_.num_particles(); ++p)
+    const std::size_t start = offsets[idx];
+    const std::size_t end = offsets[idx + 1];
+    
+    double axis_x = 0.0, axis_y = 0.0, axis_z = 1.0;
+    double angle = 0.0;
+
+    if ((end - start) >= 2)  // two spheres needed to define orientation
     {
-        const double p_cx = px[p];
-        const double p_cy = py[p];
-        const double p_cz = pz[p];
-        const double p_bound = pr[p];
+        // Define direction as the vector from sphere 0 to sphere 1
+        // All particles are built following this convention
+        double dir_x = sx[start + 1] - sx[start];
+        double dir_y = sy[start + 1] - sy[start];
+        double dir_z = sz[start + 1] - sz[start];
 
-        const std::size_t start = offsets[p];
-        const std::size_t end = offsets[p + 1];
-
-        // Check all 27 potential image locations (including the original box dx=dy=dz=0)
-        for (int dx = -1; dx <= 1; ++dx)
+        double norm = std::sqrt(dir_x*dir_x + dir_y*dir_y + dir_z*dir_z);
+        if (norm > 1e-12)
         {
-            for (int dy = -1; dy <= 1; ++dy)
-            {
-                for (int dz = -1; dz <= 1; ++dz)
-                {
-                    // Center of the particle in this specific ghost image
-                    const double tx_p = p_cx + dx * lengths_[0];
-                    const double ty_p = p_cy + dy * lengths_[1];
-                    const double tz_p = p_cz + dz * lengths_[2];
+            dir_x /= norm;
+            dir_y /= norm;
+            dir_z /= norm;
 
-                    // Check if the particle's bounding sphere touches the primary box [0, L]
-                    // This uses a simple AABB vs Sphere intersection logic
-                    if (tx_p + p_bound > 0 && tx_p - p_bound < lengths_[0] &&
-                        ty_p + p_bound > 0 && ty_p - p_bound < lengths_[1] &&
-                        tz_p + p_bound > 0 && tz_p - p_bound < lengths_[2])
+            // Compute rotation from reference (1,0,0) to current direction
+            double dot = std::max(-1.0, std::min(1.0, dir_x));
+            angle = std::acos(dot);
+
+            // Cross product: (1,0,0) x (dir_x, dir_y, dir_z)
+            axis_x = 0.0;
+            axis_y = -dir_z;
+            axis_z = dir_y;
+
+            double axis_norm = std::sqrt(axis_y*axis_y + axis_z*axis_z);
+            if (axis_norm > 1e-12)
+            {
+                axis_y /= axis_norm;
+                axis_z /= axis_norm;
+            }
+            else if (dot < 0)  // anti-parallel: direction is (-1,0,0)
+            {
+                axis_y = 1.0;
+                axis_z = 0.0;
+                angle = M_PI;
+            }
+        }
+    }
+    else  // no orientation, default to zero rotation
+    {
+        axis_x = 0.0;
+        axis_y = 0.0;
+        axis_z = 1.0;
+        angle = 0.0;
+    }
+
+    return {static_cast<double>(id), x, y, z, axis_x, axis_y, axis_z, angle};
+}
+
+std::vector<double> Packing::data_array(bool periodic) const
+{
+    const std::size_t n = geometry_.num_particles();
+    std::vector<double> positions;
+    
+    if (!periodic)
+    {
+        positions.resize(n * 8);
+        for (std::size_t i = 0; i < n; ++i)
+        {
+            auto pos = particle_data(i);
+            for (std::size_t j = 0; j < 8; ++j)
+            {
+                positions[i * 8 + j] = pos[j];
+            }
+        }
+    }
+    else
+    {
+        const auto& [px, py, pz, pr, pid] = geometry_.particle_data;
+        
+        for (std::size_t i = 0; i < n; ++i)
+        {
+            const double p_cx = px[i];
+            const double p_cy = py[i];
+            const double p_cz = pz[i];
+            const double p_bound = pr[i];
+            const double p_idx = pid[i];  // geometry group index
+            
+            // Get orientation data (same for all periodic images)
+            auto pos = particle_data(i);
+            
+            // Check all 27 potential image locations
+            for (int dx = -1; dx <= 1; ++dx)
+            {
+                for (int dy = -1; dy <= 1; ++dy)
+                {
+                    for (int dz = -1; dz <= 1; ++dz)
                     {
-                        // The particle (or at least its bounding sphere) is visible here.
-                        // Export all constituent spheres for this image.
-                        for (std::size_t s = start; s < end; ++s)
+                        const double tx_p = p_cx + dx * lengths_[0];
+                        const double ty_p = p_cy + dy * lengths_[1];
+                        const double tz_p = p_cz + dz * lengths_[2];
+                        
+                        // Check if bounding sphere touches primary box [0, L]
+                        if (tx_p + p_bound > 0 && tx_p - p_bound < lengths_[0] &&
+                            ty_p + p_bound > 0 && ty_p - p_bound < lengths_[1] &&
+                            tz_p + p_bound > 0 && tz_p - p_bound < lengths_[2])
                         {
-                            file << sx[s] + dx * lengths_[0] << ","
-                                 << sy[s] + dy * lengths_[1] << ","
-                                 << sz[s] + dz * lengths_[2] << ","
-                                 << sr[s] << ","
-                                 << p << std::endl;
-                            ++num_exported;
+                            positions.push_back(p_idx);   // idx (geometry group, 0-based)
+                            positions.push_back(tx_p);    // x
+                            positions.push_back(ty_p);    // y
+                            positions.push_back(tz_p);    // z
+                            positions.push_back(pos[4]);  // axis_x
+                            positions.push_back(pos[5]);  // axis_y
+                            positions.push_back(pos[6]);  // axis_z
+                            positions.push_back(pos[7]);  // angle
                         }
                     }
                 }
             }
         }
     }
-
-    file.close();
-    std::cout << "Exported " << num_exported << " spheres (including periodic images) to " << filename << std::endl;
+    
+    return positions;
 }
 
 } // namespace pygrain

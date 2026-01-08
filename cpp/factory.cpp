@@ -1,4 +1,4 @@
-#include "packing_geometry.hpp"
+#include "geometry.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -8,14 +8,16 @@ namespace pygrain
 
 void begin_particle(PackingGeometry& geometry, 
                     double x, double y, double z, 
-                    double bounding_radius)
+                    double bounding_radius,
+                    std::size_t geometry_idx)
 {
-    auto& [px, py, pz, pr] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particle_data;
 
     px.push_back(x);
     py.push_back(y);
     pz.push_back(z);
     pr.push_back(bounding_radius);
+    pid.push_back(geometry_idx);
 }
 
 void end_particle(PackingGeometry& geometry)
@@ -36,22 +38,24 @@ void add_particle_sphere(PackingGeometry& geometry,
 }
 
 void generate_sphere_particle(PackingGeometry& geometry, 
-                              double radius)
+                              double radius,
+                              std::size_t geometry_idx)
 {
-    begin_particle(geometry, 0.0, 0.0, 0.0, radius);
+    begin_particle(geometry, 0.0, 0.0, 0.0, radius, geometry_idx);
     add_particle_sphere(geometry, 0.0, 0.0, 0.0, radius);
     end_particle(geometry);
 }
 
 void generate_spheroid_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
-                                double minor_axis, 
+                                double minor_axis,
+                                std::size_t geometry_idx, 
                                 double sphere_precision)
 {
     const double a = minor_axis / 2.0;  // minor semi-axis
     const double c = a * aspect_ratio;       // major semi-axis
 
-    begin_particle(geometry, 0.0, 0.0, 0.0, c);
+    begin_particle(geometry, 0.0, 0.0, 0.0, c, geometry_idx);
 
     // If nearly spherical, just add one sphere
     if (std::abs(a - c) / std::max(a, c) < 1e-4)
@@ -96,7 +100,8 @@ void generate_spheroid_particle(PackingGeometry& geometry,
 
 void generate_cylinder_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
-                                double diameter, 
+                                double diameter,
+                                std::size_t geometry_idx, 
                                 double sphere_precision)
 {    
     const double r = diameter / 2.0;           // cylinder radius
@@ -104,7 +109,7 @@ void generate_cylinder_particle(PackingGeometry& geometry,
     const double half_L = L / 2.0;
 
     const double bounding_radius = std::sqrt(half_L * half_L + r * r);
-    begin_particle(geometry, 0.0, 0.0, 0.0, bounding_radius);
+    begin_particle(geometry, 0.0, 0.0, 0.0, bounding_radius, geometry_idx);
 
     // Step size for placing spheres along axis
     const double step = r / sphere_precision;

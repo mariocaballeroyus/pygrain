@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "packing_geometry.hpp"
+#include "geometry.hpp"
 
 namespace pygrain
 {

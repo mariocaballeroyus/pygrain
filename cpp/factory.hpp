@@ -1,7 +1,7 @@
 #ifndef PARTICLE_FACTORY_HPP
 #define PARTICLE_FACTORY_HPP
 
-#include "packing_geometry.hpp"
+#include "geometry.hpp"
 
 namespace pygrain
 {
@@ -14,10 +14,12 @@ namespace pygrain
  * @param py Particle center y-coordinate.
  * @param pz Particle center z-coordinate.
  * @param bounding_radius Particle bounding radius.
+ * @param geometry_idx Geometry group index (particles with same geometry share this).
  */
 void begin_particle(PackingGeometry& geometry, 
                     double px, double py, double pz,
-                    double bounding_radius);
+                    double bounding_radius,
+                    std::size_t geometry_idx);
 
 /** 
  * @brief Finalize the current particle definition.
@@ -33,9 +35,11 @@ void end_particle(PackingGeometry& geometry);
  * 
  * @param geometry The packing geometry.
  * @param radius Sphere radius.
+ * @param geometry_idx Geometry group index (particles with same geometry share this).
  */
 void generate_sphere_particle(PackingGeometry& geometry, 
-                              double radius);
+                              double radius,
+                              std::size_t geometry_idx);
 
 /**
  * @brief Generate a spheroidal particle approximated by spheres.
@@ -45,11 +49,13 @@ void generate_sphere_particle(PackingGeometry& geometry,
  * @param geometry The packing geometry.
  * @param aspect_ratio The aspect ratio (major/minor axis).
  * @param minor_diameter The minor axis length.
+ * @param geometry_idx Geometry group index (particles with same geometry share this).
  * @param sphere_precision Controls the density of spheres along the major axis.
  */
 void generate_spheroid_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
-                                double minor_diameter, 
+                                double minor_diameter,
+                                std::size_t geometry_idx,
                                 double sphere_precision = 2.0);
 
 /**
@@ -60,11 +66,13 @@ void generate_spheroid_particle(PackingGeometry& geometry,
  * @param geometry The packing geometry.
  * @param aspect_ratio The aspect ratio (length/diameter).
  * @param diameter The diameter.
+ * @param geometry_idx Geometry group index (particles with same geometry share this).
  * @param sphere_precision Controls the density of spheres along the cylinder axis.
  */
 void generate_cylinder_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
-                                double diameter, 
+                                double diameter,
+                                std::size_t geometry_idx,
                                 double sphere_precision = 2.0);
 
 } // namespace pygrain
