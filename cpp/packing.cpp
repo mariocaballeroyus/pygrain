@@ -70,7 +70,8 @@ void Packing::randomize_particles()
     }
 }
 
-void Packing::generate(unsigned int max_iterations)
+void Packing::generate(unsigned int max_iterations,
+                       unsigned int log_interval)
 {
     randomize_particles();
 
@@ -169,10 +170,15 @@ void Packing::generate(unsigned int max_iterations)
         }
 
         ++num_iterations;
+        if (log_interval > 0 && num_iterations % log_interval == 0)
+        {
         std::cout << "Iteration " << num_iterations 
                   << ": Number of overlaps = " << num_overlaps << std::endl;
+        }
     }
     while (num_overlaps > 0 && num_iterations < max_iterations);
+
+    std::cout << "Packing generation completed at iteration " << num_iterations << std::endl;
 }
 
 std::array<double, 8> Packing::particle_data(std::size_t idx) const
@@ -195,7 +201,6 @@ std::array<double, 8> Packing::particle_data(std::size_t idx) const
     if ((end - start) >= 2)  // two spheres needed to define orientation
     {
         // Define direction as the vector from sphere 0 to sphere 1
-        // All particles are built following this convention
         double dir_x = sx[start + 1] - sx[start];
         double dir_y = sy[start + 1] - sy[start];
         double dir_z = sz[start + 1] - sz[start];

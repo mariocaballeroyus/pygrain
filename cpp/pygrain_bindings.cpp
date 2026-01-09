@@ -14,24 +14,25 @@ PYBIND11_MODULE(_pygrain, m)
         .def("add_sphere_particles", &pygrain::Packing::add_sphere_particles, 
                                     py::arg("radius"),
                                     py::arg("num"),
-                                    py::arg("geometry_idx"))
+                                    py::arg("id"))
 
         .def("add_spheroid_particles", &pygrain::Packing::add_spheroid_particles, 
                                       py::arg("aspect_ratio"), 
                                       py::arg("minor_axis"),
                                       py::arg("num"),
-                                      py::arg("geometry_idx"))
+                                      py::arg("id"))
 
         .def("add_cylinder_particles", &pygrain::Packing::add_cylinder_particles, 
                                       py::arg("aspect_ratio"), 
                                       py::arg("diameter"),
                                       py::arg("num"),
-                                      py::arg("geometry_idx"))
+                                      py::arg("id"))
 
         .def("randomize_particles", &pygrain::Packing::randomize_particles)
 
         .def("generate", &pygrain::Packing::generate, 
-                         py::arg("max_iterations"))
+                         py::arg("max_iterations"),
+                         py::arg("log_interval"))
 
         .def("num_particles", &pygrain::Packing::num_particles)
 

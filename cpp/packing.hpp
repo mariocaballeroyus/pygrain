@@ -20,7 +20,7 @@ public:
      * @brief Default constructor.
      * @details Initializes an empty packing with zero domain lengths.
      */
-    Packing() : geometry_(), lengths_({0.0, 0.0, 0.0}), geometry_idx_(0) {}
+    Packing() : geometry_(), lengths_({0.0, 0.0, 0.0}) {}
 
     /**
      * @brief Packing constructor with specified domain lengths.
@@ -28,16 +28,18 @@ public:
      * @param lengths The domain box lengths in x, y, z directions.
      */
     Packing(std::array<double, 3> lengths)
-        : geometry_(), lengths_(lengths), geometry_idx_(0) {}
+        : geometry_(), lengths_(lengths) {}
 
     /**
      * @brief Add a spherical particle to the packing.
      * 
      * @param radius The sphere radius.
      * @param num Number of particles to add.
-     * @param geometry_idx The geometry index to assign to these particles.
+     * @param id Geometry group ID (particles with same geometry share this).
      */
-    void add_sphere_particles(double radius, int num, std::size_t geometry_idx);
+    void add_sphere_particles(double radius, 
+                              int num, 
+                              std::size_t id);
 
     /**
      * @brief Add a spheroidal particle to the packing.
@@ -46,9 +48,12 @@ public:
      * @param aspect_ratio The aspect ratio (major/minor axis).
      * @param minor_axis The minor axis length.
      * @param num Number of particles to add.
-     * @param geometry_idx The geometry index to assign to these particles.
+     * @param id Geometry group ID (particles with same geometry share this).
      */
-    void add_spheroid_particles(double aspect_ratio, double minor_axis, int num, std::size_t geometry_idx);
+    void add_spheroid_particles(double aspect_ratio, 
+                                double minor_axis, 
+                                int num, 
+                                std::size_t id);
 
     /**
      * @brief Add a cylindrical particle to the packing.
@@ -57,12 +62,15 @@ public:
      * @param aspect_ratio The aspect ratio (length/diameter).
      * @param diameter The diameter.
      * @param num Number of particles to add.
-     * @param geometry_idx The geometry index to assign to these particles.
+     * @param id Geometry group ID (particles with same geometry share this).
      */
-    void add_cylinder_particles(double aspect_ratio, double diameter, int num, std::size_t geometry_idx);
+    void add_cylinder_particles(double aspect_ratio, 
+                                double diameter, 
+                                int num, 
+                                std::size_t id);
 
     /**
-     * @brief Randomize positions and orientations of all particles.
+     * @brief Randomize positions and orientations of all particles in the packing.
      */
     void randomize_particles();
 
@@ -71,7 +79,26 @@ public:
      * 
      * @param max_iterations Maximum number of iterations.
      */
-    void generate(unsigned int max_iterations);
+    void generate(unsigned int max_iterations,
+                  unsigned int log_interval);
+
+    /**
+     * @brief Get the ID, position and orientation of a particle.
+     * @details A particle's data is [x, y, z, axis_x, axis_y, axis_z, angle, type].
+     * 
+     * @param idx The particle index.
+     * @return The array of particle data.
+     */
+    std::array<double, 8> particle_data(std::size_t idx) const;
+
+    /**
+     * @brief Get the positions and orientations of all particles.
+     * @details Each particle's data is [id, x, y, z, axis_x, axis_y, axis_z, angle].
+     * 
+     * @param periodic Whether to include periodic images potentially overlapping the box.
+     * @return The array of all particle data.
+     */
+    std::vector<double> data_array(bool periodic) const;
 
     /**
      * @brief Get the (const) geometry of the packing.
@@ -92,28 +119,6 @@ public:
     { return lengths_; }
 
     /**
-     * @brief Get the ID, position and orientation of a particle.
-     * @details The orientation is expressed as axis-angle rotation from the 
-     *          reference orientation (aligned with x-axis). This format is 
-     *          compatible with Gmsh's rotation operations.
-     * 
-     * @param idx The particle index.
-     * @return Array of 8 doubles: [id, x, y, z, axis_x, axis_y, axis_z, angle].
-     */
-    std::array<double, 8> particle_data(std::size_t idx) const;
-
-    /**
-     * @brief Get the positions and orientations of all particles.
-     * @details Returns a flat array of size 8*N where N is the number of particles
-     *          (or more if include_periodic is true).
-     *          Each particle's data is [x, y, z, axis_x, axis_y, axis_z, angle, type].
-     * 
-     * @param include_periodic If true, includes periodic images that touch the primary box.
-     * @return Vector of positions in row-major order.
-     */
-    std::vector<double> data_array(bool periodic) const;
-
-    /**
      * @brief Get the number of particles in the packing.
      */
     std::size_t num_particles() const
@@ -129,11 +134,6 @@ private:
      * @brief The domain box lengths in x, y, z directions.
      */
     std::array<double, 3> lengths_;
-
-    /**
-     * @brief Counter for geometry group indices (increments with each add_*_particles call).
-     */
-    std::size_t geometry_idx_;
 };
 
 } // namespace pygrain

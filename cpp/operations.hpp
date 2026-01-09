@@ -1,5 +1,5 @@
-#ifndef PARTICLE_OPERATIONS_HPP
-#define PARTICLE_OPERATIONS_HPP
+#ifndef OPERATIONS_HPP
+#define OPERATIONS_HPP
 
 #include <cmath>
 
@@ -8,7 +8,16 @@
 namespace pygrain
 {
 
+/**
+ * @brief Rotation factor to scale rotation angles during particle interactions.
+ * @details Rotations are proportional to the torque vector multiplied by this factor.
+ */
 constexpr double ROTATION_FACTOR = 1.0E-12;
+
+/**
+ * @brief Overlap tolerance as a fraction of the sum of sphere radii.
+ * @details Used to prevent numerical instability by ignoring minor overlaps.
+ */
 constexpr double OVERLAP_TOLERANCE = 1.0E-6;
 
 /**
@@ -60,4 +69,4 @@ bool particle_interaction(PackingGeometry& geometry,
 
 } // namespace pygrain
 
-#endif // PARTICLE_OPERATIONS_HPP
+#endif // OPERATIONS_HPP

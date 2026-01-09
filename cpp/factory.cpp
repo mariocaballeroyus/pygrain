@@ -1,3 +1,4 @@
+#include "factory.hpp"
 #include "geometry.hpp"
 
 #include <cmath>
@@ -8,16 +9,16 @@ namespace pygrain
 
 void begin_particle(PackingGeometry& geometry, 
                     double x, double y, double z, 
-                    double bounding_radius,
-                    std::size_t geometry_idx)
+                    double r, 
+                    std::size_t id)
 {
     auto& [px, py, pz, pr, pid] = geometry.particle_data;
 
     px.push_back(x);
     py.push_back(y);
     pz.push_back(z);
-    pr.push_back(bounding_radius);
-    pid.push_back(geometry_idx);
+    pr.push_back(r);
+    pid.push_back(id);
 }
 
 void end_particle(PackingGeometry& geometry)
@@ -39,9 +40,9 @@ void add_particle_sphere(PackingGeometry& geometry,
 
 void generate_sphere_particle(PackingGeometry& geometry, 
                               double radius,
-                              std::size_t geometry_idx)
+                              std::size_t id)
 {
-    begin_particle(geometry, 0.0, 0.0, 0.0, radius, geometry_idx);
+    begin_particle(geometry, 0.0, 0.0, 0.0, radius, id);
     add_particle_sphere(geometry, 0.0, 0.0, 0.0, radius);
     end_particle(geometry);
 }
@@ -49,16 +50,14 @@ void generate_sphere_particle(PackingGeometry& geometry,
 void generate_spheroid_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
                                 double minor_axis,
-                                std::size_t geometry_idx, 
-                                double sphere_precision)
+                                std::size_t id)
 {
     const double a = minor_axis / 2.0;  // minor semi-axis
-    const double c = a * aspect_ratio;       // major semi-axis
+    const double c = a * aspect_ratio;  // major semi-axis
 
-    begin_particle(geometry, 0.0, 0.0, 0.0, c, geometry_idx);
+    begin_particle(geometry, 0.0, 0.0, 0.0, c, id);
 
-    // If nearly spherical, just add one sphere
-    if (std::abs(a - c) / std::max(a, c) < 1e-4)
+    if (std::abs(a - c) / std::max(a, c) < 1e-4)  // nearly spherical
     {
         add_particle_sphere(geometry, 0.0, 0.0, 0.0, a);
         end_particle(geometry);
@@ -77,13 +76,13 @@ void generate_spheroid_particle(PackingGeometry& geometry,
 
         // Add spheres symmetrically along the major axis (z-axis for prolate)
         add_particle_sphere(geometry, x0, 0.0, 0.0, radius);
-        if (x0 > 1e-10)  // Only add second sphere if not at center
+        if (x0 > 1e-10)  // only add second sphere if not at center
         {
             add_particle_sphere(geometry, -x0, 0.0, 0.0, radius);
         }
 
         last_radius = radius;
-        x -= radius / sphere_precision;
+        x -= radius / SPHERE_PRECISION;
 
         if (x <= 0.0)
             break;
@@ -101,18 +100,17 @@ void generate_spheroid_particle(PackingGeometry& geometry,
 void generate_cylinder_particle(PackingGeometry& geometry, 
                                 double aspect_ratio, 
                                 double diameter,
-                                std::size_t geometry_idx, 
-                                double sphere_precision)
+                                std::size_t id)
 {    
     const double r = diameter / 2.0;           // cylinder radius
     const double L = aspect_ratio * diameter;  // cylinder length
     const double half_L = L / 2.0;
 
     const double bounding_radius = std::sqrt(half_L * half_L + r * r);
-    begin_particle(geometry, 0.0, 0.0, 0.0, bounding_radius, geometry_idx);
+    begin_particle(geometry, 0.0, 0.0, 0.0, bounding_radius, id);
 
     // Step size for placing spheres along axis
-    const double step = r / sphere_precision;
+    const double step = r / SPHERE_PRECISION;
 
     // Add large spheres (radius = r) along the central axis
     const double end_sphere_x = std::max(0.0, half_L - r);
@@ -135,11 +133,11 @@ void generate_cylinder_particle(PackingGeometry& geometry,
     }
 
     // Add two rings of small spheres at the corners (cap edges)
-    const double edge_radius = r / (2.0 * sphere_precision);
+    const double edge_radius = r / (2.0 * SPHERE_PRECISION);
     const int num_edge_spheres = static_cast<int>(std::ceil(M_PI * r / edge_radius));
     const double edge_angle_step = 2.0 * M_PI / num_edge_spheres;
 
-    // Outer ring: at the very edge where cap meets curved surface
+    // Outer ring: at the edge where cap meets curved surface
     const double outer_radial = r - edge_radius;
     const double outer_x = half_L - edge_radius;
 

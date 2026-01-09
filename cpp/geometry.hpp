@@ -1,5 +1,5 @@
-#ifndef PARTICLE_GEOMETRY_HPP
-#define PARTICLE_GEOMETRY_HPP
+#ifndef GEOMETRY_HPP
+#define GEOMETRY_HPP
 
 #include <vector>
 #include <array>
@@ -7,30 +7,21 @@
 namespace pygrain
 {
 
-/**
- * @brief Particle type enumeration.
- */
-enum class ParticleType : int
-{
-    Sphere = 0,
-    Spheroid = 1,
-    Cylinder = 2
-};
-
 struct PackingGeometry
 {
     /**
-     * @brief Particle center of mass coordinates and bounding radii stored as contiguous arrays.
-     * @details Format: [x, y, z, radius, idx]. 
-     * All rotation operations are performed around a particle's center point. 
-     * A bounding radius is defined as the radius of the smallest sphere enclosing the particle geometry.
+     * @brief Particle ID, center of mass coordinates and bounding radii stored as contiguous arrays.
+     * @details Format: [id, x, y, z, r]. 
+     *          All rotation operations are performed around a particle's center point. 
+     *          A bounding radius is defined as the radius of the smallest sphere enclosing the 
+     *          particle geometry.
      */
     std::array<std::vector<double>, 5> particle_data;
 
     /**
      * @brief Sphere center coordinates and radii from all particles stored as contiguous arrays.
      * @details Format: [x, y, z, radius].
-     * Multiple spheres approximate the shape of each particle.
+     *          Multiple spheres approximate the shape of each particle.
      */
     std::array<std::vector<double>, 4> sphere_data;
 
@@ -62,4 +53,4 @@ struct PackingGeometry
 
 } // namespace pygrain
 
-#endif // PARTICLE_GEOMETRY_HPP
+#endif // GEOMETRY_HPP

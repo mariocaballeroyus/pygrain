@@ -13,10 +13,12 @@ void translate_particle(PackingGeometry& geometry,
     std::size_t start = geometry.particle_offsets[idx];
     std::size_t end = geometry.particle_offsets[idx + 1];
 
+    // Update particle center position
     px[idx] += translation[0];
     py[idx] += translation[1];
     pz[idx] += translation[2];
 
+    // Update sphere positions
     for (std::size_t i = start; i < end; ++i) 
     {
         sx[i] += translation[0];
@@ -35,13 +37,17 @@ void set_particle_position(PackingGeometry& geometry,
     std::size_t start = geometry.particle_offsets[idx];
     std::size_t end = geometry.particle_offsets[idx + 1];
 
+    // Compute translation vector
     const double dx = position[0] - px[idx];
     const double dy = position[1] - py[idx];
     const double dz = position[2] - pz[idx];
 
+    // Update particle center position
     px[idx] = position[0];
     py[idx] = position[1];
     pz[idx] = position[2];
+
+    // Update sphere positions
     for (std::size_t i = start; i < end; ++i) 
     {
         sx[i] += dx;
@@ -57,11 +63,7 @@ void rotate_particle(PackingGeometry& geometry,
 {
     auto& [px, py, pz, pr, pid] = geometry.particle_data;
     auto& [sx, sy, sz, sr] = geometry.sphere_data;
-
-    // Axis assumed normalized
-    const double ux = axis[0];
-    const double uy = axis[1];
-    const double uz = axis[2];
+    const auto& [ux, uy, uz] = axis;  // assumed normalized
 
     // Pre-calculate trigonometry
     const double c = std::cos(angle);
@@ -82,16 +84,16 @@ void rotate_particle(PackingGeometry& geometry,
     const std::size_t start = geometry.particle_offsets[idx];
     const std::size_t end = geometry.particle_offsets[idx + 1];
 
-    const double cx_val = px[idx];
-    const double cy_val = py[idx];
-    const double cz_val = pz[idx];
+    const double cx = px[idx];
+    const double cy = py[idx];
+    const double cz = pz[idx];
 
     for (std::size_t i = start; i < end; ++i) 
     {
         // Translate to origin
-        const double x = sx[i] - cx_val;
-        const double y = sy[i] - cy_val;
-        const double z = sz[i] - cz_val;
+        const double x = sx[i] - cx;
+        const double y = sy[i] - cy;
+        const double z = sz[i] - cz;
 
         // Apply rotation matrix
         const double rx = r00 * x + r01 * y + r02 * z;
@@ -99,9 +101,9 @@ void rotate_particle(PackingGeometry& geometry,
         const double rz = r20 * x + r21 * y + r22 * z;
 
         // Translate back
-        sx[i] = rx + cx_val;
-        sy[i] = ry + cy_val;
-        sz[i] = rz + cz_val;
+        sx[i] = rx + cx;
+        sy[i] = ry + cy;
+        sz[i] = rz + cz;
     }
 }
 
@@ -122,9 +124,9 @@ bool particle_interaction(PackingGeometry& geometry,
     const std::size_t start2 = geometry.particle_offsets[idx2];
     const std::size_t end2 = geometry.particle_offsets[idx2 + 1];
 
-    for (std::size_t m = start1; m < end1; ++m)
+    for (std::size_t m = start1; m < end1; ++m)  // spheres of particle 1
     {
-        for (std::size_t n = start2; n < end2; ++n)
+        for (std::size_t n = start2; n < end2; ++n)  // spheres of particle 2
         {
             // Compute overlap vector between spheres m and n
             const double dx = sx[n] - sx[m];
@@ -134,7 +136,7 @@ bool particle_interaction(PackingGeometry& geometry,
             const double radius_sum = sr[m] + sr[n];
             const double tol = OVERLAP_TOLERANCE * radius_sum;
             
-            // Only count as overlap if penetration exceeds tolerance
+            // Only count as overlap if exceeds tolerance
             if (dist < radius_sum - tol)
             {
                 const double overlap_mag = radius_sum - dist;
@@ -164,7 +166,7 @@ bool particle_interaction(PackingGeometry& geometry,
 
     translate_particle(geometry, idx1, displacement);
 
-    // Rotation: cross product of (center_i - center_j) x displacement
+    // Rotation: cross product (center_i - center_j) x displacement
     const double Ci_x = px[idx1];
     const double Ci_y = py[idx1];
     const double Ci_z = pz[idx1];
@@ -172,10 +174,12 @@ bool particle_interaction(PackingGeometry& geometry,
     const double Cj_y = py[idx2];
     const double Cj_z = pz[idx2];
 
+    // Compute torque vector
     rotation[0] = (Ci_y - Cj_y) * displacement[2] - (Ci_z - Cj_z) * displacement[1];
     rotation[1] = (Ci_z - Cj_z) * displacement[0] - (Ci_x - Cj_x) * displacement[2];
     rotation[2] = (Ci_x - Cj_x) * displacement[1] - (Ci_y - Cj_y) * displacement[0];
 
+    // Compute rotation angle (non-scaled)
     const double rot_angle = std::sqrt(rotation[0]*rotation[0] +
                                        rotation[1]*rotation[1] +
                                        rotation[2]*rotation[2]);

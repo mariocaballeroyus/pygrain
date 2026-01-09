@@ -135,7 +135,6 @@ TEST_CASE("Sphere approximation of spheroid", "[Spheroid]")
     }
 }
 
-
 /**
  * @brief Test volume coverage of spheroid by approximating spheres.
  * 
