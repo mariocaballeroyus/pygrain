@@ -3,7 +3,7 @@
 
 #include "geometry.hpp"
 
-namespace pygrain
+namespace pygrain3d
 {
 
 /**

@@ -1,3 +1,7 @@
+"""pygrain3d: A Python library for 3D grain packing and mesh generation."""
+
+__version__ = "0.1.0"
+
 from .packing import (
     Packing, 
     create_packing,

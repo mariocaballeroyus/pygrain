@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace pygrain
+namespace pygrain3d
 {
 
 void begin_particle(PackingGeometry& geometry, 

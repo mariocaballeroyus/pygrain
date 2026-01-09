@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include "pygrain.hpp"
+#include "pygrain3d.hpp"
 
  /**
   * @brief Test adding a spherical particle to the packing.
@@ -12,7 +12,7 @@ TEST_CASE("Add Sphere Particle", "[Packing]")
 {
     constexpr double tol = 1e-12;
 
-    pygrain::Packing packing;
+    pygrain3d::Packing packing;
     packing.add_sphere_particles(1.0, 1, 0);
 
     REQUIRE(packing.get_geometry().num_spheres() == 1);
@@ -34,10 +34,10 @@ TEST_CASE("Translate Particle", "[ParticleGeometry]")
 {
     constexpr double tol = 1e-12;
 
-    pygrain::Packing packing;
+    pygrain3d::Packing packing;
     packing.add_sphere_particles(1.0, 1, 0);
 
-    pygrain::translate_particle(packing.get_geometry(), 0, {1.0, 2.0, 3.0});
+    pygrain3d::translate_particle(packing.get_geometry(), 0, {1.0, 2.0, 3.0});
 
     const auto& [x, y, z, r] = packing.get_geometry().sphere_data;
 
@@ -55,7 +55,7 @@ TEST_CASE("Rotate Particle", "[ParticleGeometry]")
 {
     constexpr double tol = 1e-12;
 
-    pygrain::Packing packing;
+    pygrain3d::Packing packing;
     packing.add_sphere_particles(1.0, 1, 0);
 
     // Manually set the center to (1,0,0) for rotation
@@ -67,26 +67,26 @@ TEST_CASE("Rotate Particle", "[ParticleGeometry]")
     const auto& [sx, sy, sz, sr] = packing.get_geometry().sphere_data;
 
     // 90 deg around Z-axis
-    pygrain::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, -1.0}, M_PI/2);
+    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, -1.0}, M_PI/2);
 
     REQUIRE(sx[0] == Approx(1.0).margin(tol));
     REQUIRE(sy[0] == Approx(1.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
 
     // 90 deg around X-axis
-    pygrain::rotate_particle(packing.get_geometry(), 0, {-1.0, 0.0, 0.0}, M_PI/2);
+    pygrain3d::rotate_particle(packing.get_geometry(), 0, {-1.0, 0.0, 0.0}, M_PI/2);
     REQUIRE(sx[0] == Approx(1.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(-1.0).margin(tol));
 
     // 270 deg around Y-axis
-    pygrain::rotate_particle(packing.get_geometry(), 0, {0.0, 1.0, 0.0}, 3*M_PI/2);
+    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 1.0, 0.0}, 3*M_PI/2);
     REQUIRE(sx[0] == Approx(2.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
 
     // 180 deg around Z-axis
-    pygrain::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, 1.0}, M_PI);
+    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, 1.0}, M_PI);
     REQUIRE(sx[0] == Approx(0.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
@@ -109,8 +109,8 @@ TEST_CASE("Sphere approximation of spheroid", "[Spheroid]")
     const double c = a * aspect_ratio;
 
     // Create geometry and generate spheroid particle
-    pygrain::PackingGeometry geometry;
-    pygrain::generate_spheroid_particle(geometry, aspect_ratio, minor_axis, 0);
+    pygrain3d::PackingGeometry geometry;
+    pygrain3d::generate_spheroid_particle(geometry, aspect_ratio, minor_axis, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();
@@ -155,8 +155,8 @@ TEST_CASE("Spheroid volume coverage", "[Spheroid]")
     const double a = (eq_diameter / 2.0) / std::sqrt(aspect_ratio);
 
     // Create geometry and generate spheroid particle
-    pygrain::PackingGeometry geometry;
-    pygrain::generate_spheroid_particle(geometry, aspect_ratio, eq_diameter, 0);
+    pygrain3d::PackingGeometry geometry;
+    pygrain3d::generate_spheroid_particle(geometry, aspect_ratio, eq_diameter, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();
@@ -234,8 +234,8 @@ TEST_CASE("Cylinder volume coverage", "[Cylinder]")
     const double half_L = L / 2.0;
 
     // Create geometry and generate cylinder particle
-    pygrain::PackingGeometry geometry;
-    pygrain::generate_cylinder_particle(geometry, aspect_ratio, diameter, 0);
+    pygrain3d::PackingGeometry geometry;
+    pygrain3d::generate_cylinder_particle(geometry, aspect_ratio, diameter, 0);
 
     const auto& [sx, sy, sz, sr] = geometry.sphere_data;
     const std::size_t num_spheres = geometry.num_spheres();

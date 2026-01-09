@@ -3,7 +3,7 @@ requires = ["scikit-build-core>=0.5", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "pygrain"
+name = "pygrain3d"
 version = "0.1.0"
 description = "Particle packing library with C++ backend"
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 dev = ["pytest"]
 
 [tool.scikit-build]
-wheel.packages = ["pygrain"]
+wheel.packages = ["pygrain3d"]
 cmake.build-type = "Release"
 build-dir = "build"
 editable.mode = "redirect"

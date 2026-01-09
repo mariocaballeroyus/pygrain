@@ -6,39 +6,43 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_pygrain, m)
+namespace pygrain3d
 {
-    py::class_<pygrain::Packing>(m, "Packing")
+
+PYBIND11_MODULE(_pygrain3d, m)
+{
+    py::class_<Packing>(m, "Packing")
         .def(py::init<std::array<double, 3>>(), py::arg("lengths"))
 
-        .def("add_sphere_particles", &pygrain::Packing::add_sphere_particles, 
+        .def("add_sphere_particles", &Packing::add_sphere_particles, 
                                     py::arg("radius"),
                                     py::arg("num"),
                                     py::arg("id"))
 
-        .def("add_spheroid_particles", &pygrain::Packing::add_spheroid_particles, 
+        .def("add_spheroid_particles", &Packing::add_spheroid_particles, 
                                       py::arg("aspect_ratio"), 
                                       py::arg("minor_axis"),
                                       py::arg("num"),
                                       py::arg("id"))
 
-        .def("add_cylinder_particles", &pygrain::Packing::add_cylinder_particles, 
+        .def("add_cylinder_particles", &Packing::add_cylinder_particles, 
                                       py::arg("aspect_ratio"), 
                                       py::arg("diameter"),
                                       py::arg("num"),
                                       py::arg("id"))
 
-        .def("randomize_particles", &pygrain::Packing::randomize_particles)
+        .def("randomize_particles", &Packing::randomize_particles)
 
-        .def("generate", &pygrain::Packing::generate, 
+        .def("generate", &Packing::generate, 
                          py::arg("max_iterations"),
                          py::arg("log_interval"))
 
-        .def("num_particles", &pygrain::Packing::num_particles)
-
-        .def("data_array", [](const pygrain::Packing& self, bool periodic) {
+        .def("num_particles", &Packing::num_particles)
+        .def("data_array", [](const Packing& self, bool periodic) {
             auto positions = self.data_array(periodic);
             std::size_t n = positions.size() / 8;
             return py::array_t<double>({n, std::size_t(8)}, positions.data());
         }, py::arg("periodic"));
 }
+
+} // namespace pygrain3d

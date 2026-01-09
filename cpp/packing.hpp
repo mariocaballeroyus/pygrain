@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 
-namespace pygrain
+namespace pygrain3d
 {
 
 class Packing

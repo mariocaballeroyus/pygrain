@@ -1,6 +1,6 @@
 #include "operations.hpp"
 
-namespace pygrain
+namespace pygrain3d
 {
 
 void translate_particle(PackingGeometry& geometry,

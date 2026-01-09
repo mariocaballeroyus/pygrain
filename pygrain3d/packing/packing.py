@@ -5,14 +5,14 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from .. import _pygrain
+from .. import _pygrain3d
 
 from .particle import Particle, Sphere, Spheroid, Cylinder
 
 
 class Packing:
     """Packing domain containing multiple particles."""
-    _cpp_object: _pygrain.Packing
+    _cpp_object: _pygrain3d.Packing
 
     def __init__(self, lengths: list[float]) -> None:
         """Initialize a packing domain.
@@ -20,7 +20,7 @@ class Packing:
         Args:
             lengths: Domain lengths in x, y, z directions.
         """
-        self._cpp_object = _pygrain.Packing(lengths)
+        self._cpp_object = _pygrain3d.Packing(lengths)
         self.lengths = lengths
         self.particles: list[Particle] = []
 

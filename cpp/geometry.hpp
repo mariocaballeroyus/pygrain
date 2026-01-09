@@ -4,7 +4,7 @@
 #include <vector>
 #include <array>
 
-namespace pygrain
+namespace pygrain3d
 {
 
 struct PackingGeometry

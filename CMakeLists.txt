@@ -27,10 +27,10 @@ target_link_libraries(tests_pygrain PRIVATE pygrain_core)
 
 # Build Python bindings
 add_subdirectory(external/pybind11)
-pybind11_add_module(_pygrain cpp/pygrain_bindings.cpp)
+pybind11_add_module(_pygrain3d cpp/pygrain_bindings.cpp)
 # Include directories and library linking for bindings
-target_include_directories(_pygrain PRIVATE cpp)
-target_link_libraries(_pygrain PRIVATE pygrain_core)
+target_include_directories(_pygrain3d PRIVATE cpp)
+target_link_libraries(_pygrain3d PRIVATE pygrain_core)
 
-# Install the extension module into the pygrain package
-install(TARGETS _pygrain DESTINATION pygrain)
+# Install the extension module into the pygrain3d package
+install(TARGETS _pygrain3d DESTINATION pygrain3d)

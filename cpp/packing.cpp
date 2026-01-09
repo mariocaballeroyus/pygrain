@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace pygrain
+namespace pygrain3d
 {
 
 void Packing::add_sphere_particles(double radius, 
