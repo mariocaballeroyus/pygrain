@@ -79,6 +79,14 @@ class Spheroid(Particle):
     @property
     def major_axis(self) -> float:
         return self.minor_axis * self.aspect_ratio
+
+    @property
+    def semi_minor_axis(self) -> float:
+        return self.minor_axis / 2
+
+    @property
+    def semi_major_axis(self) -> float:
+        return self.major_axis / 2
     
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Spheroid):
