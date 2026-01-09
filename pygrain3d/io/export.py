@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+import gmsh
 import numpy as np
 from numpy.typing import NDArray
-
-import gmsh
 
 from ..packing.packing import Packing
 from ..packing.particle import Sphere, Spheroid, Cylinder
@@ -38,82 +38,83 @@ def to_stl(path: Path | str) -> None:
 
 
 def to_csv(packing: Packing, path: Path | str, periodic: bool = True) -> None:
-    """Export particle data to a CSV file. The file will contain separate 
-    chunks for each supported particle type.
+    """Export particle data to a single merged CSV file with header sections.
     
     Args:
-        packing: Packing instance containing particle data.
-        path: Output CSV file path.
-        periodic: Whether to include periodic images (default: True).
+        packing: Packing object containing particles
+        path: Output file path (must end with .csv)
+        periodic: Include periodic images if True
     """
     path = Path(path) if isinstance(path, str) else path
     
     if path.suffix.lower() != ".csv":
-        raise ValueError("Output file must have a .csv extension.")
+        raise ValueError("File path must end with .csv extension")
+    
+    # Create parent directory if it doesn't exist
+    if not path.parent.exists():
+        os.makedirs(str(path.parent))
     
     data = packing.data_array(periodic)
     indices = np.unique(data[:, 0].astype(int))
 
-    spheres_data: list[NDArray[np.float64]]  = []
-    spheroids_data: list[NDArray[np.float64]] = []
-    cylinders_data: list[NDArray[np.float64]] = []
+    # Storage for each type
+    spheres_list = []
+    spheroids_list = []
+    cylinders_list = []
 
     for idx in indices:
         if idx >= len(packing.particles):
-            continue  # skip empty indices
+            continue
 
         particle_type = packing.particles[idx]
         rows = (data[:, 0].astype(int) == idx)
         subset = data[rows]
 
         if subset.shape[0] == 0:
-            continue  # skip if no data for this particle
+            continue
 
         if isinstance(particle_type, Sphere):
-            # Format: [x, y, z, r]
             r = particle_type.radius
-            geo = np.full((subset.shape[0], 1), r)  # r
-            pos = subset[:, 1:4]                    # x, y, z
-
-            chunk = np.hstack([pos, geo])
-            spheres_data.append(chunk)
+            geo = np.full((subset.shape[0], 1), r)
+            spheres_list.append(np.hstack([subset[:, 1:4], geo]))
 
         elif isinstance(particle_type, Spheroid):
-            # Format: [x, y, z, axis_x, axis_y, axis_z, angle, a, c]
             a = particle_type.semi_minor_axis
             c = particle_type.semi_major_axis
-            geo = np.full((subset.shape[0], 2), [a, c])  # a, c
-            pos = subset[:, 1:8]                         # x, y, z, ax, ay, az, angle
-
-            chunk = np.hstack([pos, geo])
-            spheroids_data.append(chunk)
+            geo = np.full((subset.shape[0], 2), [a, c])
+            spheroids_list.append(np.hstack([subset[:, 1:8], geo]))
 
         elif isinstance(particle_type, Cylinder):
-            # Format: [x, y, z, axis_x, axis_y, axis_z, angle, L, D]
             l = particle_type.length
             d = particle_type.diameter
-            geo = np.full((subset.shape[0], 2), [l, d])  # l, d
-            pos = subset[:, 1:8]                         # x, y, z, ax, ay, az, angle
+            geo = np.full((subset.shape[0], 2), [l, d])
+            cylinders_list.append(np.hstack([subset[:, 1:8], geo]))
 
-            chunk = np.hstack([pos, geo])
-            cylinders_data.append(chunk)
-
+    # Write to single merged CSV file
+    total_count = 0
+    
     with open(path, 'w') as f:
-        if spheres_data:
-            header = "x,y,z,r"
-            all_spheres = np.vstack(spheres_data)
-            np.savetxt(f, all_spheres, delimiter=",", header=header, fmt='%.8f')
-
-        if spheroids_data:
-            header = "x,y,z,axis_x,axis_y,axis_z,angle,a,c"
-            all_spheroids = np.vstack(spheroids_data)
-            np.savetxt(f, all_spheroids, delimiter=",", header=header, fmt='%.8f')
-
-        if cylinders_data:
-            header = "x,y,z,axis_x,axis_y,axis_z,angle,L,D"
-            all_cylinders = np.vstack(cylinders_data)
-            np.savetxt(f, all_cylinders, delimiter=",", header=header, fmt='%.8f')
-
-    print(f"\nExported particle data to {path}.")
+        # Write spheres section
+        if spheres_list:
+            f.write("#x,y,z,r\n")
+            sphere_data = np.vstack(spheres_list)
+            np.savetxt(f, sphere_data, delimiter=",", fmt='%.8f')
+            total_count += len(sphere_data)
+        
+        # Write cylinders section
+        if cylinders_list:
+            f.write("#x,y,z,ax,ay,az,angle,l,d\n")
+            cylinder_data = np.vstack(cylinders_list)
+            np.savetxt(f, cylinder_data, delimiter=",", fmt='%.8f')
+            total_count += len(cylinder_data)
+        
+        # Write spheroids section
+        if spheroids_list:
+            f.write("#x,y,z,ax,ay,az,angle,a,c\n")
+            spheroid_data = np.vstack(spheroids_list)
+            np.savetxt(f, spheroid_data, delimiter=",", fmt='%.8f')
+            total_count += len(spheroid_data)
+    
+    print(f"Exported {total_count} particles to {path}")
     if periodic:
         print("  * Periodic images included.")

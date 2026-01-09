@@ -251,64 +251,73 @@ std::vector<double> Packing::data_array(bool periodic) const
     const std::size_t n = geometry_.num_particles();
     std::vector<double> positions;
     
-    if (!periodic)
+    // Optimization: Reserve space for at least the base particles
+    positions.reserve(n * 8);
+
+    // Add all base particles regardless of periodic value ---
+    for (std::size_t i = 0; i < n; ++i)
     {
-        positions.resize(n * 8);
-        for (std::size_t i = 0; i < n; ++i)
+        auto pos = particle_data(i); 
+        for (std::size_t j = 0; j < 8; ++j)
         {
-            auto pos = particle_data(i);
-            for (std::size_t j = 0; j < 8; ++j)
-            {
-                positions[i * 8 + j] = pos[j];
-            }
+            positions.push_back(pos[j]);
         }
     }
-    else
+
+    // --- Step 2 & 3: Handle Periodic Images ---
+    if (periodic)
     {
         const auto& [px, py, pz, pr, pid] = geometry_.particle_data;
-        
+
         for (std::size_t i = 0; i < n; ++i)
         {
-            const double p_cx = px[i];
-            const double p_cy = py[i];
-            const double p_cz = pz[i];
-            const double p_bound = pr[i];
-            const double p_idx = pid[i];  // geometry group index
+            const double radius = pr[i];
             
-            // Get orientation data (same for all periodic images)
-            auto pos = particle_data(i);
-            
-            // Check all 27 potential image locations
-            for (int dx = -1; dx <= 1; ++dx)
+            // Determine possible shifts for each dimension
+            // A shift is needed if the center is within 'radius' of a boundary
+            std::vector<double> dx_shifts = {0.0};
+            if (px[i] < radius) dx_shifts.push_back(lengths_[0]);
+            else if (px[i] > lengths_[0] - radius) dx_shifts.push_back(-lengths_[0]);
+
+            std::vector<double> dy_shifts = {0.0};
+            if (py[i] < radius) dy_shifts.push_back(lengths_[1]);
+            else if (py[i] > lengths_[1] - radius) dy_shifts.push_back(-lengths_[1]);
+
+            std::vector<double> dz_shifts = {0.0};
+            if (pz[i] < radius) dz_shifts.push_back(lengths_[2]);
+            else if (pz[i] > lengths_[2] - radius) dz_shifts.push_back(-lengths_[2]);
+
+            // If we only have {0,0,0}, no images are needed
+            if (dx_shifts.size() == 1 && dy_shifts.size() == 1 && dz_shifts.size() == 1)
+                continue;
+
+            // Cache orientation/ID to avoid repeated function calls
+            auto base_data = particle_data(i);
+
+            // Loop through combinations to generate 1, 3, or 7 images
+            for (double dx : dx_shifts)
             {
-                for (int dy = -1; dy <= 1; ++dy)
+                for (double dy : dy_shifts)
                 {
-                    for (int dz = -1; dz <= 1; ++dz)
+                    for (double dz : dz_shifts)
                     {
-                        const double tx_p = p_cx + dx * lengths_[0];
-                        const double ty_p = p_cy + dy * lengths_[1];
-                        const double tz_p = p_cz + dz * lengths_[2];
-                        
-                        // Check if bounding sphere touches primary box [0, L]
-                        if (tx_p + p_bound > 0 && tx_p - p_bound < lengths_[0] &&
-                            ty_p + p_bound > 0 && ty_p - p_bound < lengths_[1] &&
-                            tz_p + p_bound > 0 && tz_p - p_bound < lengths_[2])
-                        {
-                            positions.push_back(p_idx);   // idx (geometry group, 0-based)
-                            positions.push_back(tx_p);    // x
-                            positions.push_back(ty_p);    // y
-                            positions.push_back(tz_p);    // z
-                            positions.push_back(pos[4]);  // axis_x
-                            positions.push_back(pos[5]);  // axis_y
-                            positions.push_back(pos[6]);  // axis_z
-                            positions.push_back(pos[7]);  // angle
-                        }
+                        if (dx == 0.0 && dy == 0.0 && dz == 0.0) 
+                            continue;
+
+                        positions.push_back(base_data[0]);       // ID
+                        positions.push_back(base_data[1] + dx);  // Shifted X
+                        positions.push_back(base_data[2] + dy);  // Shifted Y
+                        positions.push_back(base_data[3] + dz);  // Shifted Z
+                        positions.push_back(base_data[4]);       // Axis X
+                        positions.push_back(base_data[5]);       // Axis Y
+                        positions.push_back(base_data[6]);       // Axis Z
+                        positions.push_back(base_data[7]);       // Angle
                     }
                 }
             }
         }
     }
-    
+
     return positions;
 }
 

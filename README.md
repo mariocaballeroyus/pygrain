@@ -1,6 +1,6 @@
-# pygrain
+# pygrain3d
 
-Particle packing library with C++ backend and Python interface.
+A library for 3d particle packing generation with C++ backend and Python interface.
 
 ![Description of image](docs/packing.png)
 
