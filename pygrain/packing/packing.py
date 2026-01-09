@@ -1,3 +1,5 @@
+"""Packing domain management with multiple particles."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -9,6 +11,7 @@ from .particle import Particle, Sphere, Spheroid, Cylinder
 
 
 class Packing:
+    """Packing domain containing multiple particles."""
     _cpp_object: _pygrain.Packing
 
     def __init__(self, lengths: list[float]) -> None:
@@ -20,19 +23,20 @@ class Packing:
         self._cpp_object = _pygrain.Packing(lengths)
         self.lengths = lengths
         self.particles: list[Particle] = []
-        self._geometry_idx_counter = 0
 
-    def add_sphere_particles(self, radius: float, num: int) -> int:
+    def add_sphere_particles(self, radius: float, num: int, corr_length: float = 0.0, sq_roughness: float = 0.0) -> int:
         """Add multiple sphere particles to the packing.
         
         Args:
             radius: Sphere radius.
             num: Number of sphere particles to add.
+            corr_length: Correlation length for surface roughness (default: 0.0, no roughness).
+            sq_roughness: Squared roughness parameter (variance) (default: 0.0, no roughness).
             
         Returns:
             The geometry index (ID) assigned to these particles.
         """
-        sphere = Sphere(num=num, radius=radius)
+        sphere = Sphere(num=num, radius=radius, corr_length=corr_length, sq_roughness=sq_roughness)
 
         for idx, p in enumerate(self.particles):
             if p == sphere:
@@ -45,18 +49,20 @@ class Packing:
         self._cpp_object.add_sphere_particles(radius, num, idx)
         return idx
 
-    def add_spheroid_particles(self, aspect_ratio: float, minor_axis: float, num: int) -> int:
+    def add_spheroid_particles(self, aspect_ratio: float, minor_axis: float, num: int, corr_length: float = 0.0, sq_roughness: float = 0.0) -> int:
         """Add multiple spheroid particles to the packing.
         
         Args:
             aspect_ratio: Spheroid aspect ratio (major_axis / minor_axis).
             minor_axis: Minor axis length (full axis).
             num: Number of spheroid particles to add.
+            corr_length: Correlation length for surface roughness (default: 0.0, no roughness).
+            sq_roughness: Squared roughness parameter (variance) (default: 0.0, no roughness).
             
         Returns:
             The geometry index (ID) assigned to these particles.
         """
-        spheroid = Spheroid(num=num, minor_axis=minor_axis, aspect_ratio=aspect_ratio)
+        spheroid = Spheroid(num=num, minor_axis=minor_axis, aspect_ratio=aspect_ratio, corr_length=corr_length, sq_roughness=sq_roughness)
 
         for idx, p in enumerate(self.particles):
             if p == spheroid:
@@ -93,13 +99,14 @@ class Packing:
         self._cpp_object.add_cylinder_particles(aspect_ratio, diameter, num, idx)
         return idx
 
-    def generate(self, max_iterations: int) -> None:
+    def generate(self, max_iterations: int, log_interval: int = 500) -> None:
         """Generate a packing with non-overlapping particles.
         
         Args:
             max_iterations: Maximum number of iterations to attempt packing.
+            log_interval: Interval for logging progress.
         """
-        self._cpp_object.generate(max_iterations)
+        self._cpp_object.generate(max_iterations, log_interval)
 
     @property
     def num_particles(self) -> int:
@@ -107,11 +114,15 @@ class Packing:
         return self._cpp_object.num_particles()
 
     @property
+    def volume(self) -> float:
+        """Get the total volume of the packing."""
+        return self.lengths[0] * self.lengths[1] * self.lengths[2]
+
+    @property
     def porosity(self) -> float:
         """Calculate and return the porosity of the packing."""
         solid_vol = sum(p.acc_volume for p in self.particles)
-        total_vol = self.lengths[0] * self.lengths[1] * self.lengths[2]
-        return 1.0 - solid_vol / total_vol
+        return 1.0 - solid_vol / self.volume
 
     def data_array(self, periodic: bool = False) -> NDArray[np.float64]:
         """Get all particle positions a numpy array.

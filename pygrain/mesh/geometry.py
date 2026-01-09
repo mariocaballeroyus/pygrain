@@ -1,18 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+import gmsh
 import numpy as np
 from numpy.typing import NDArray
-
 from scipy.spatial.transform import Rotation
 
-import gmsh
-
 from ..packing.particle import Particle, Sphere, Spheroid, Cylinder
-
-if TYPE_CHECKING:
-    from ..packing.packing import Packing
 
 
 def _create_occ_geometry(particle: Particle) -> int:
@@ -42,15 +35,19 @@ def _create_occ_geometry(particle: Particle) -> int:
         radius = particle.radius
         return gmsh.model.occ.addCylinder(-length / 2, 0, 0, length, 0, 0, radius)
     
+    # TODO: 
+    # Add support for new particles in the future
+    
     else:
         raise TypeError(f"Unknown particle type: {type(particle)}")
 
 
-def _mesh_occ_geometry(vol_tag: int, mesh_size: float) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
+def _mesh_occ_geometry(
+    mesh_size: float
+) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
     """Create OCC geometry, mesh it, and return nodes and elements.
     
     Args:
-        vol_tag: The gmsh volume tag of the template geometry.
         mesh_size: Target mesh element size.
     
     Returns:
@@ -86,7 +83,17 @@ def _transform_nodes(
     angle: float,
     translation: NDArray[np.float64]
 ) -> NDArray[np.float64]:
-    """Transform nodes by rotation then translation."""
+    """Transform nodes by rotation then translation.
+    
+    Args:
+        nodes: Array of node coordinates (N x 3).
+        axis: Rotation axis (3,).
+        angle: Rotation angle in radians.
+        translation: Translation vector (3,).
+
+    Returns:
+        Transformed node coordinates (N x 3).
+    """
     if abs(angle) < 1e-12:
         return nodes + translation
     
