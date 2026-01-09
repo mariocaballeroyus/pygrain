@@ -101,7 +101,7 @@ class PackingMesh:
         Returns:
             Tuple of (all_nodes, all_triangles, num_primary_particles, num_primary_triangles).
         """
-        data_array = packing.data_array(periodic=periodic)
+        data_array = packing.particle_array(periodic=periodic)
         
         if len(data_array) == 0:
             raise ValueError("No particles in packing")

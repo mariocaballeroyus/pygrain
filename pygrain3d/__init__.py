@@ -4,7 +4,8 @@ __version__ = "0.1.0"
 
 from .packing import (
     Packing, 
-    create_packing,
+    create_periodic_box,
+    create_periodic_cube,
     Particle,
     Sphere,
     Spheroid,
@@ -15,7 +16,8 @@ from .io import to_csv, to_stl
 
 __all__ = [
     "Packing",
-    "create_packing",
+    "create_periodic_box",
+    "create_periodic_cube",
     "Particle",
     "Sphere",
     "Spheroid",

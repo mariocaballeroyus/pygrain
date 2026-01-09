@@ -12,7 +12,7 @@ void begin_particle(PackingGeometry& geometry,
                     double r, 
                     std::size_t id)
 {
-    auto& [px, py, pz, pr, pid] = geometry.particle_data;
+    auto& [px, py, pz, pr, pid] = geometry.particles;
 
     px.push_back(x);
     py.push_back(y);
@@ -23,14 +23,14 @@ void begin_particle(PackingGeometry& geometry,
 
 void end_particle(PackingGeometry& geometry)
 {
-    geometry.particle_offsets.push_back(geometry.sphere_data[0].size());
+    geometry.particle_offsets.push_back(geometry.spheres[0].size());
 }
 
 void add_particle_sphere(PackingGeometry& geometry, 
                          double x, double y, double z, 
                          double radius)
 {
-    auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    auto& [sx, sy, sz, sr] = geometry.spheres;
 
     sx.push_back(x);
     sy.push_back(y);

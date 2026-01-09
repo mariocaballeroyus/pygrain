@@ -84,12 +84,13 @@ public:
 
     /**
      * @brief Get the ID, position and orientation of a particle.
-     * @details A particle's data is [x, y, z, axis_x, axis_y, axis_z, angle, type].
+     * @details A particle's data is [id, x, y, z, axis_x, axis_y, axis_z, angle].
      * 
      * @param idx The particle index.
      * @return The array of particle data.
      */
-    std::array<double, 8> particle_data(std::size_t idx) const;
+    std::array<double, 8> particle_data(std::size_t idx) const
+    { return geometry_.particle_data(idx); }
 
     /**
      * @brief Get the positions and orientations of all particles.
@@ -98,24 +99,41 @@ public:
      * @param periodic Whether to include periodic images potentially overlapping the box.
      * @return The array of all particle data.
      */
-    std::vector<double> data_array(bool periodic) const;
+    std::vector<double> particle_array(bool periodic) const
+    { return geometry_.particle_array(lengths_, periodic); }
+
+    /**
+     * @brief Get the positions and radii of all spheres.
+     * @details Each sphere's data is [x, y, z, radius].
+     * 
+     * @return The array of all sphere data.
+     */
+    std::vector<double> sphere_array() const
+    { return geometry_.sphere_array(); }
+
+    /**
+     * @brief Clear all particles and spheres from the packing.
+     * @details Removes all particle and sphere data, resetting the packing to empty state.
+     */
+    void clear()
+    { geometry_.clear(); }
 
     /**
      * @brief Get the (const) geometry of the packing.
      */
-    const PackingGeometry& get_geometry() const 
+    const PackingGeometry& geometry() const 
     { return geometry_; }
 
     /**
      * @brief Get the (non-const) geometry of the packing.
      */
-    PackingGeometry& get_geometry() 
+    PackingGeometry& geometry() 
     { return geometry_; }
 
     /**
      * @brief Get the domain lengths.
      */
-    const std::array<double, 3>& get_lengths() const 
+    const std::array<double, 3>& lengths() const 
     { return lengths_; }
 
     /**

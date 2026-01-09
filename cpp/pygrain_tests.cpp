@@ -15,9 +15,9 @@ TEST_CASE("Add Sphere Particle", "[Packing]")
     pygrain3d::Packing packing;
     packing.add_sphere_particles(1.0, 1, 0);
 
-    REQUIRE(packing.get_geometry().num_spheres() == 1);
+    REQUIRE(packing.geometry().num_spheres() == 1);
 
-    const auto& [x, y, z, radii] = packing.get_geometry().sphere_data;
+    const auto& [x, y, z, radii] = packing.geometry().spheres;
 
     REQUIRE(x[0] == Approx(0.0).margin(tol));
     REQUIRE(y[0] == Approx(0.0).margin(tol));
@@ -37,9 +37,9 @@ TEST_CASE("Translate Particle", "[ParticleGeometry]")
     pygrain3d::Packing packing;
     packing.add_sphere_particles(1.0, 1, 0);
 
-    pygrain3d::translate_particle(packing.get_geometry(), 0, {1.0, 2.0, 3.0});
+    pygrain3d::translate_particle(packing.geometry(), 0, {1.0, 2.0, 3.0});
 
-    const auto& [x, y, z, r] = packing.get_geometry().sphere_data;
+    const auto& [x, y, z, r] = packing.geometry().spheres;
 
     REQUIRE(x[0] == Approx(1.0).margin(tol));
     REQUIRE(y[0] == Approx(2.0).margin(tol));
@@ -59,34 +59,34 @@ TEST_CASE("Rotate Particle", "[ParticleGeometry]")
     packing.add_sphere_particles(1.0, 1, 0);
 
     // Manually set the center to (1,0,0) for rotation
-    auto& [px, py, pz, pr, pid] = packing.get_geometry().particle_data;
+    auto& [px, py, pz, pr, pid] = packing.geometry().particles;
     px[0] = 1.0;
     py[0] = 0.0;
     pz[0] = 0.0;
 
-    const auto& [sx, sy, sz, sr] = packing.get_geometry().sphere_data;
+    const auto& [sx, sy, sz, sr] = packing.geometry().spheres;
 
     // 90 deg around Z-axis
-    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, -1.0}, M_PI/2);
+    pygrain3d::rotate_particle(packing.geometry(), 0, {0.0, 0.0, -1.0}, M_PI/2);
 
     REQUIRE(sx[0] == Approx(1.0).margin(tol));
     REQUIRE(sy[0] == Approx(1.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
 
     // 90 deg around X-axis
-    pygrain3d::rotate_particle(packing.get_geometry(), 0, {-1.0, 0.0, 0.0}, M_PI/2);
+    pygrain3d::rotate_particle(packing.geometry(), 0, {-1.0, 0.0, 0.0}, M_PI/2);
     REQUIRE(sx[0] == Approx(1.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(-1.0).margin(tol));
 
     // 270 deg around Y-axis
-    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 1.0, 0.0}, 3*M_PI/2);
+    pygrain3d::rotate_particle(packing.geometry(), 0, {0.0, 1.0, 0.0}, 3*M_PI/2);
     REQUIRE(sx[0] == Approx(2.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
 
     // 180 deg around Z-axis
-    pygrain3d::rotate_particle(packing.get_geometry(), 0, {0.0, 0.0, 1.0}, M_PI);
+    pygrain3d::rotate_particle(packing.geometry(), 0, {0.0, 0.0, 1.0}, M_PI);
     REQUIRE(sx[0] == Approx(0.0).margin(tol));
     REQUIRE(sy[0] == Approx(0.0).margin(tol));
     REQUIRE(sz[0] == Approx(0.0).margin(tol));
@@ -112,7 +112,7 @@ TEST_CASE("Sphere approximation of spheroid", "[Spheroid]")
     pygrain3d::PackingGeometry geometry;
     pygrain3d::generate_spheroid_particle(geometry, aspect_ratio, minor_axis, 0);
 
-    const auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    const auto& [sx, sy, sz, sr] = geometry.spheres;
     const std::size_t num_spheres = geometry.num_spheres();
 
     REQUIRE(num_spheres > 0);
@@ -158,7 +158,7 @@ TEST_CASE("Spheroid volume coverage", "[Spheroid]")
     pygrain3d::PackingGeometry geometry;
     pygrain3d::generate_spheroid_particle(geometry, aspect_ratio, eq_diameter, 0);
 
-    const auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    const auto& [sx, sy, sz, sr] = geometry.spheres;
     const std::size_t num_spheres = geometry.num_spheres();
 
     int pts_inside = 0;   // points inside spheroid
@@ -237,7 +237,7 @@ TEST_CASE("Cylinder volume coverage", "[Cylinder]")
     pygrain3d::PackingGeometry geometry;
     pygrain3d::generate_cylinder_particle(geometry, aspect_ratio, diameter, 0);
 
-    const auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    const auto& [sx, sy, sz, sr] = geometry.spheres;
     const std::size_t num_spheres = geometry.num_spheres();
 
     int pts_inside = 0;   // points inside cylinder

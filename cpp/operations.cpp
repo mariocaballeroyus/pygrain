@@ -7,8 +7,8 @@ void translate_particle(PackingGeometry& geometry,
                         std::size_t idx, 
                         const std::array<double, 3>& translation)
 {
-    auto& [px, py, pz, pr, pid] = geometry.particle_data;
-    auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    auto& [px, py, pz, pr, pid] = geometry.particles;
+    auto& [sx, sy, sz, sr] = geometry.spheres;
 
     std::size_t start = geometry.particle_offsets[idx];
     std::size_t end = geometry.particle_offsets[idx + 1];
@@ -31,8 +31,8 @@ void set_particle_position(PackingGeometry& geometry,
                            std::size_t idx,
                            const std::array<double, 3>& position)
 {
-    auto& [px, py, pz, pr, pid] = geometry.particle_data;
-    auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    auto& [px, py, pz, pr, pid] = geometry.particles;
+    auto& [sx, sy, sz, sr] = geometry.spheres;
 
     std::size_t start = geometry.particle_offsets[idx];
     std::size_t end = geometry.particle_offsets[idx + 1];
@@ -61,8 +61,8 @@ void rotate_particle(PackingGeometry& geometry,
                      const std::array<double, 3>& axis, 
                      double angle)
 {
-    auto& [px, py, pz, pr, pid] = geometry.particle_data;
-    auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    auto& [px, py, pz, pr, pid] = geometry.particles;
+    auto& [sx, sy, sz, sr] = geometry.spheres;
     const auto& [ux, uy, uz] = axis;  // assumed normalized
 
     // Pre-calculate trigonometry
@@ -111,8 +111,8 @@ bool particle_interaction(PackingGeometry& geometry,
                             std::size_t idx1, 
                             std::size_t idx2)
 {
-    auto& [px, py, pz, pr, pid] = geometry.particle_data;
-    auto& [sx, sy, sz, sr] = geometry.sphere_data;
+    auto& [px, py, pz, pr, pid] = geometry.particles;
+    auto& [sx, sy, sz, sr] = geometry.spheres;
 
     std::array<double, 3> displacement = {0.0, 0.0, 0.0};
     std::array<double, 3> rotation = {0.0, 0.0, 0.0};

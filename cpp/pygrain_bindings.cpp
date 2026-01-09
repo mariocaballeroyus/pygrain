@@ -38,11 +38,19 @@ PYBIND11_MODULE(_pygrain3d, m)
                          py::arg("log_interval"))
 
         .def("num_particles", &Packing::num_particles)
-        .def("data_array", [](const Packing& self, bool periodic) {
-            auto positions = self.data_array(periodic);
+        .def("clear", &Packing::clear)
+
+        .def("particle_array", [](const Packing& self, bool periodic) {
+            auto positions = self.particle_array(periodic);
             std::size_t n = positions.size() / 8;
             return py::array_t<double>({n, std::size_t(8)}, positions.data());
-        }, py::arg("periodic"));
+        }, py::arg("periodic"))
+
+        .def("sphere_array", [](const Packing& self) {
+            auto spheres = self.sphere_array();
+            std::size_t n = spheres.size() / 4;
+            return py::array_t<double>({n, std::size_t(4)}, spheres.data());
+        });
 }
 
 } // namespace pygrain3d

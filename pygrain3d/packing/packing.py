@@ -14,7 +14,7 @@ class Packing:
     """Packing domain containing multiple particles."""
     _cpp_object: _pygrain3d.Packing
 
-    def __init__(self, lengths: list[float]) -> None:
+    def __init__(self, lengths: tuple[float, float, float]) -> None:
         """Initialize a packing domain.
         
         Args:
@@ -23,6 +23,11 @@ class Packing:
         self._cpp_object = _pygrain3d.Packing(lengths)
         self.lengths = lengths
         self.particles: list[Particle] = []
+
+    def clear(self) -> None:
+        """Clear all particles from the packing."""
+        self._cpp_object.clear()
+        self.particles = []
 
     def add_sphere_particles(self, radius: float, num: int, corr_length: float = 0.0, sq_roughness: float = 0.0) -> int:
         """Add multiple sphere particles to the packing.
@@ -125,7 +130,7 @@ class Packing:
         solid_vol = sum(p.acc_volume for p in self.particles)
         return 1.0 - solid_vol / self.volume
 
-    def data_array(self, periodic: bool = False) -> NDArray[np.float64]:
+    def particle_array(self, periodic: bool = False) -> NDArray[np.float64]:
         """Get all particle positions a numpy array.
         
         Args:
@@ -135,11 +140,31 @@ class Packing:
             Numpy array of shape (num_particles, 8) with columns:
             [idx, x, y, z, axis_x, axis_y, axis_z, angle]
         """
-        return self._cpp_object.data_array(periodic)
+        return self._cpp_object.particle_array(periodic)
+
+    def sphere_array(self) -> NDArray[np.float64]:
+        """Get all sphere positions and radii as a numpy array.
+        
+        Returns:
+            Numpy array of shape (num_spheres, 4) with columns:
+            [x, y, z, radius]
+        """
+        return self._cpp_object.sphere_array()
+
+def create_periodic_cube(length: float) -> Packing:
+    """Create a periodic cubic packing domain.
+    
+    Args:
+        length: Length of the cube sides.
+
+    Returns:
+        Packing object.
+    """
+    return Packing((length, length, length))
     
 
-def create_packing(lengths: list[float]) -> Packing:
-    """Create a packing domain.
+def create_periodic_box(lengths: tuple[float, float, float]) -> Packing:
+    """Create a periodic box packing domain.
     
     Args:
         lengths: Domain lengths in x, y, z directions.

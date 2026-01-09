@@ -12,6 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 # Build core pygrain as static library 
 add_library(pygrain_core STATIC 
+    cpp/geometry.cpp
     cpp/packing.cpp
     cpp/factory.cpp
     cpp/operations.cpp

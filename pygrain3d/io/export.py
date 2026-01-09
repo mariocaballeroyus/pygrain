@@ -54,7 +54,7 @@ def to_csv(packing: Packing, path: Path | str, periodic: bool = True) -> None:
     if not path.parent.exists():
         os.makedirs(str(path.parent))
     
-    data = packing.data_array(periodic)
+    data = packing.particle_array(periodic)
     indices = np.unique(data[:, 0].astype(int))
 
     # Storage for each type
