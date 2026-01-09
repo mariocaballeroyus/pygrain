@@ -1,3 +1,5 @@
+"""Surface roughness generation and application on meshes."""
+
 from __future__ import annotations
 
 import numpy as np

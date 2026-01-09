@@ -1,6 +1,8 @@
 # pygrain
 
-Particle packing library with C++ backend and Python bindings.
+Particle packing library with C++ backend and Python interface.
+
+![Description of image](docs/packing.png)
 
 ## Installation
 

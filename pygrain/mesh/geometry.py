@@ -1,3 +1,5 @@
+"""Geometry creation and meshing for particle types."""
+
 from __future__ import annotations
 
 import gmsh

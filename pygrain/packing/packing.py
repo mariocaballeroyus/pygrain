@@ -106,6 +106,7 @@ class Packing:
             max_iterations: Maximum number of iterations to attempt packing.
             log_interval: Interval for logging progress.
         """
+        print(f"Starting packing generation with {self.num_particles} particles ...")
         self._cpp_object.generate(max_iterations, log_interval)
 
     @property
